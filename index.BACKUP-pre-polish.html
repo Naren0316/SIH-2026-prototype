@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TransitMitra — Live Demo Console | Team SafarMitra · SIH26204</title>
+<style>
+/* ============================================================
+   TransitMitra demo console — Team SafarMitra, SIH 2026
+   Fully self-contained: no CDN, no build step, runs offline.
+   ============================================================ */
+:root{
+  --indigo:#16264F; --indigo2:#22346B; --teal:#0E7C86; --teald:#0A5F66;
+  --mint:#10B8A0;  --ink:#1B2A3A;    --mute:#5C6B7A; --tint:#F2F6F8;
+  --tealt:#E7F2F2; --amber:#D98324;  --green:#2C8A5B; --red:#C0392B;
+  --line:#D7E1E8;  --white:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Segoe UI",Calibri,system-ui,Arial,sans-serif;
+  background:linear-gradient(150deg,#0F1B38,#16264F 45%,#0C5A61);
+  color:var(--ink); min-height:100vh; padding:14px 18px 18px;
+}
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:12px;color:#fff}
+.brand{font-size:20px;font-weight:800;letter-spacing:.2px}
+.brand span{color:#7FE6D5}
+.tagline{font-size:12.5px;color:#BFD9DA}
+.topmeta{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{background:rgba(255,255,255,.10);border:1px solid rgba(127,230,213,.5);
+  color:#E8FBF6;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap}
+.btn-replay{background:var(--mint);color:#06312B;border:0;font-weight:800;font-size:12px;
+  padding:7px 15px;border-radius:20px;cursor:pointer}
+.btn-replay:hover{filter:brightness(1.08)}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:1fr 348px 1.35fr;gap:14px;align-items:start}
+.panel{background:var(--white);border-radius:14px;padding:15px 16px;
+  box-shadow:0 8px 26px rgba(4,20,40,.30)}
+.ptitle{font-size:15.5px;font-weight:800;color:var(--indigo);display:flex;align-items:center;gap:8px}
+.psub{font-size:11.5px;color:var(--mute);margin-top:2px;margin-bottom:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mint);flex:0 0 auto}
+
+/* ---------- panel A : kiosk ---------- */
+.kiosk{background:var(--tint);border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+.kiosk-h{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.kiosk-ico{width:34px;height:34px;border-radius:9px;background:var(--teal);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:17px}
+.kiosk-name{font-size:13.5px;font-weight:800;color:var(--indigo)}
+.kiosk-loc{font-size:11px;color:var(--mute)}
+.payload{margin-top:11px;display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;align-items:center;gap:8px;font-size:12px;background:#fff;
+  border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.prow b{color:var(--teald)}
+.prow .tick{color:var(--green);font-weight:800}
+.btn-sync{width:100%;margin-top:12px;background:var(--teal);color:#fff;border:0;
+  font-size:14px;font-weight:800;padding:12px;border-radius:10px;cursor:pointer}
+.btn-sync:hover{background:var(--teald)}
+.btn-sync:disabled{background:#9FB6BD;cursor:default}
+.bar{height:7px;background:#DCE7EA;border-radius:6px;margin-top:11px;overflow:hidden;display:none}
+.bar.on{display:block}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--mint));
+  border-radius:6px;transition:width .12s linear}
+.synced{display:none;margin-top:11px;background:#E7F6EE;border:1px solid #B7E0C9;
+  color:#1E6B44;font-size:11.5px;font-weight:700;border-radius:9px;padding:9px 11px;line-height:1.45}
+.synced.on{display:block}
+.note{font-size:10.5px;color:var(--mute);margin-top:10px;line-height:1.45;font-style:italic}
+.why{margin-top:13px;background:var(--tealt);border:1px solid #C6DEDE;border-radius:11px;padding:11px 13px}
+.why-t{font-size:12.5px;font-weight:800;color:var(--teald);margin-bottom:5px}
+.why-b{font-size:11.5px;color:var(--ink);line-height:1.55}
+.keys{margin-top:12px;background:#F7FAFB;border:1px dashed var(--line);border-radius:10px;
+  padding:9px 12px;font-size:11px;color:var(--mute)}
+.keys-t{font-weight:800;color:var(--indigo);font-size:11px;margin-bottom:4px;letter-spacing:.3px}
+kbd{background:var(--indigo);color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;
+  font-family:Consolas,monospace;font-weight:700}
+
+/* ---------- panel B : phone ---------- */
+.phonewrap{display:flex;justify-content:center}
+.phone{width:312px;background:#0C1730;border-radius:30px;padding:11px;
+  box-shadow:0 10px 30px rgba(0,0,0,.32)}
+.screen{background:#F6F9FA;border-radius:22px;overflow:hidden;height:544px;display:flex;flex-direction:column}
+.status{background:var(--indigo);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px}
+.sig{font-weight:800;font-size:10.5px;padding:3px 9px;border-radius:12px;letter-spacing:.3px}
+.sig.on{background:#1E6B44;color:#CFF3E2}
+.sig.off{background:#7C2620;color:#FFD9D4}
+.toggle{margin-left:auto;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.30);
+  color:#fff;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:14px;cursor:pointer}
+.toggle:hover{background:rgba(255,255,255,.24)}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--line)}
+.tab{flex:1;text-align:center;font-size:11.5px;font-weight:700;color:var(--mute);
+  padding:10px 4px;cursor:pointer;border-bottom:3px solid transparent}
+.tab.sel{color:var(--teald);border-bottom-color:var(--teal);background:var(--tealt)}
+.view{flex:1;overflow-y:auto;padding:12px}
+.view::-webkit-scrollbar{width:5px}
+.view::-webkit-scrollbar-thumb{background:#C9D6DC;border-radius:4px}
+.locked{text-align:center;color:var(--mute);font-size:12px;padding:52px 18px;line-height:1.6}
+.locked b{display:block;color:var(--indigo);font-size:13.5px;margin-bottom:6px}
+.route-h{font-size:11px;font-weight:800;color:var(--teal);letter-spacing:.6px;margin-bottom:8px}
+.rsel{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+  border-radius:9px;padding:9px 10px;font-size:12.5px;font-weight:700;color:var(--indigo);margin-bottom:10px}
+.rsel .ar{color:var(--mint);font-weight:800}
+.ride{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.ride-t{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.ride-ico{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:13px;color:#fff;flex:0 0 auto}
+.ride-n{font-size:12.5px;font-weight:800;color:var(--indigo)}
+.ride-time{margin-left:auto;font-size:10.5px;color:var(--mute);font-weight:700}
+.fare{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.fare b{font-size:17px;color:var(--teald);font-weight:800}
+.vbadge{background:#E7F6EE;color:#1E6B44;font-size:9px;font-weight:800;
+  padding:3px 7px;border-radius:10px;letter-spacing:.3px}
+.quote{font-size:10.5px;color:#A2504A;margin-top:4px}
+.quote s{color:var(--mute)}
+.save{font-size:10.5px;color:var(--green);font-weight:800;margin-top:2px}
+/* SOS */
+.sosbox{text-align:center;padding:6px 4px}
+.sosbtn{width:150px;height:150px;border-radius:50%;border:0;background:radial-gradient(circle at 38% 32%,#E35B4C,#B02A1C);
+  color:#fff;font-size:29px;font-weight:900;letter-spacing:2px;cursor:pointer;margin:14px auto 0;
+  display:block;box-shadow:0 8px 22px rgba(176,42,28,.42)}
+.sosbtn:hover{filter:brightness(1.07)}
+.sosbtn:disabled{background:#B9C4C8;box-shadow:none;cursor:default}
+.soshint{font-size:11px;color:var(--mute);margin-top:12px;line-height:1.5}
+.beacon{display:none;margin-top:12px;background:#FDF0EE;border:1px solid #F0C7C0;border-radius:9px;
+  padding:10px;text-align:left;font-size:10.5px;line-height:1.65;color:#7C2620}
+.beacon.on{display:block}
+.beacon b{color:#5E1A12}
+.disc{margin-top:11px;background:var(--tealt);border:1px solid #C6DEDE;border-radius:8px;
+  padding:8px 10px;font-size:10px;color:var(--teald);line-height:1.5}
+/* phrasebook */
+.ph{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;
+  margin-bottom:7px;display:flex;align-items:center;gap:9px}
+.ph-txt{flex:1;min-width:0}
+.ph-en{font-size:10.5px;color:var(--mute)}
+.ph-hi{font-size:13px;font-weight:800;color:var(--indigo);margin-top:1px}
+.ph-ph{font-size:10px;color:var(--teald);font-style:italic;margin-top:1px}
+.spk{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;border:0;
+  font-size:14px;cursor:pointer;flex:0 0 auto}
+.spk:hover{background:var(--teald)}
+
+/* ---------- panel C : mesh ---------- */
+.stage{position:relative;height:290px;border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,#EAF3F6 0%,#DDEBEE 62%,#D2E4E2 100%);border:1px solid var(--line)}
+.stage svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.simlabel{position:absolute;top:8px;right:10px;background:rgba(22,38,79,.82);color:#CFE9E6;
+  font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.3px}
+.node{position:absolute;transform:translate(-50%,-50%);text-align:center;width:96px}
+.ncirc{width:46px;height:46px;border-radius:50%;background:#fff;border:2.5px solid var(--indigo);
+  display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto;
+  box-shadow:0 3px 9px rgba(10,37,64,.20);transition:all .35s}
+.node.act .ncirc{border-color:var(--mint);background:var(--mint);color:#fff;
+  box-shadow:0 0 0 8px rgba(16,184,160,.26);transform:scale(1.10)}
+.node.done .ncirc{border-color:var(--green);color:var(--green)}
+.nlab{font-size:10px;font-weight:800;color:var(--indigo);margin-top:5px;line-height:1.25}
+.nsub{font-size:8.5px;color:var(--mute);line-height:1.25}
+.packet{position:absolute;width:15px;height:15px;border-radius:50%;
+  background:radial-gradient(circle at 34% 32%,#fff,#E8453A);
+  box-shadow:0 0 12px 4px rgba(232,69,58,.62);transform:translate(-50%,-50%);
+  opacity:0;transition:left 1.5s cubic-bezier(.45,.05,.35,1),top 1.5s cubic-bezier(.45,.05,.35,1),opacity .3s;z-index:5}
+.packet.on{opacity:1}
+/* log */
+.logwrap{margin-top:12px}
+.logh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:var(--indigo);margin-bottom:7px}
+.log{background:#0E1B33;border-radius:10px;padding:10px 12px;height:172px;overflow-y:auto;
+  font-family:Consolas,"Courier New",monospace;font-size:11px;line-height:1.85;color:#9FB6C4}
+.log::-webkit-scrollbar{width:5px}
+.log::-webkit-scrollbar-thumb{background:#33506E;border-radius:4px}
+.log .t{color:#6E8CA8}
+.log .ok{color:#5FE0BC;font-weight:700}
+.log .warn{color:#F2B872}
+.log .idle{color:#6E8CA8;font-style:italic}
+.result{display:none;margin-top:11px;background:#E7F6EE;border:1px solid #A9DCC0;border-radius:11px;
+  padding:12px 14px}
+.result.on{display:flex;align-items:center;gap:12px}
+.result .rico{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 auto}
+.result .rt{font-size:14px;font-weight:800;color:#1E6B44}
+.result .rs{font-size:11px;color:#2F7A54;margin-top:2px;line-height:1.45}
+.footnote{margin-top:11px;font-size:10px;color:#BFD9DA;text-align:center;line-height:1.55}
+@media (max-width:1400px){ .grid{grid-template-columns:1fr 320px 1.2fr} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="brand">Transit<span>Mitra</span></div>
+    <div class="tagline">Offline travel safety &amp; mobility mesh — live demo console</div>
+  </div>
+  <div class="topmeta">
+    <span class="chip">Team SafarMitra</span>
+    <span class="chip">SIH26204</span>
+    <button class="btn-replay" id="replay">↻ Replay demo</button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ============ PANEL A : HOTEL KIOSK ============ -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot"></span>1 · Hotel “Mitra Kiosk”</div>
+    <div class="psub">Zero-internet onboarding at check-in</div>
+
+    <div class="kiosk">
+      <div class="kiosk-h">
+        <div class="kiosk-ico">🏨</div>
+        <div>
+          <div class="kiosk-name">Hotel Devgiri Homestay</div>
+          <div class="kiosk-loc">Kasol, Parvati Valley · Kiosk node #KSL-07</div>
+        </div>
+      </div>
+
+      <div class="payload">
+        <div class="prow"><span class="tick">✔</span><span>Regional offline map — <b>Parvati Valley</b></span></div>
+        <div class="prow"><span class="tick">✔</span><span><b>12</b> transit routes (bus · jeep · auto)</span></div>
+        <div class="prow"><span class="tick">✔</span><span><b>34</b> hotel-verified fixed fares</span></div>
+        <div class="prow"><span class="tick">✔</span><span>Emergency directory + <b>4</b> language packs</span></div>
+      </div>
+
+      <button class="btn-sync" id="syncBtn">Sync to guest phone →</button>
+      <div class="bar" id="bar"><i id="barFill"></i></div>
+      <div class="synced" id="syncedMsg">
+        ✔ Synced over Wi-Fi&nbsp;Direct in 2.1 s<br>
+        <b>0 MB mobile data used · no internet required</b>
+      </div>
+      <div class="note">Transfer uses Wi-Fi Direct / BLE between two devices. Radio layer is simulated in this demo.</div>
+    </div>
+
+    <div class="why">
+      <div class="why-t">Why hotels are the network</div>
+      <div class="why-b">Every remote homestay already has power, a fixed location and a guest who just
+      arrived. That makes it the perfect <b>trusted data node</b> — no new towers, no telecom licence,
+      and the hotel gains a reason for tourists to book off-grid stays.</div>
+    </div>
+
+    <div class="keys">
+      <div class="keys-t">Demo shortcuts</div>
+      <div><kbd>1</kbd> sync &nbsp; <kbd>2</kbd> toggle network &nbsp; <kbd>3</kbd> SOS tab &nbsp; <kbd>0</kbd> reset</div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL B : TOURIST PHONE ============ -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot"></span>2 · Tourist phone</div>
+    <div class="psub">Everything below works with no signal</div>
+
+    <div class="phonewrap">
+      <div class="phone"><div class="screen">
+
+        <div class="status">
+          <span class="sig on" id="sig">● ONLINE</span>
+          <button class="toggle" id="netToggle">Go offline ✈</button>
+        </div>
+
+        <div class="tabs">
+          <div class="tab sel" data-v="transit">Transit &amp; Fares</div>
+          <div class="tab" data-v="sos">SOS</div>
+          <div class="tab" data-v="lang">Phrases</div>
+        </div>
+
+        <div class="view" id="view"></div>
+
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ============ PANEL C : MESH VISUALISER ============ -->
+  <div class="panel">
+    <div class="ptitle"><span class="dot"></span>3 · Store-&amp;-forward SOS relay</div>
+    <div class="psub">How a distress signal escapes a zero-network valley</div>
+
+    <div class="stage" id="stage">
+      <svg class="bg" viewBox="0 0 800 290" preserveAspectRatio="none">
+        <path d="M0,150 L95,58 L165,120 L245,44 L330,128 L420,66 L515,136 L610,78 L700,134 L800,88 L800,290 L0,290 Z"
+              fill="#C3D8D8" opacity=".58"/>
+        <path d="M0,186 L110,118 L210,172 L320,102 L430,176 L545,120 L660,180 L800,132 L800,290 L0,290 Z"
+              fill="#A9C7C6" opacity=".50"/>
+        <path d="M18,270 C165,250 255,276 365,258 C485,238 565,268 700,244 L792,236"
+              fill="none" stroke="#8FA9AE" stroke-width="3.5" stroke-dasharray="9 7" opacity=".8"/>
+      </svg>
+      <div class="simlabel">SIMULATED RADIO LAYER</div>
+
+      <div class="node" id="n0" style="left:10%; top:56%"><div class="ncirc">📱</div>
+        <div class="nlab">Tourist phone</div><div class="nsub">beacon created offline</div></div>
+      <div class="node" id="n1" style="left:30%; top:34%"><div class="ncirc">👤</div>
+        <div class="nlab">Peer phone</div><div class="nsub">BLE hop</div></div>
+      <div class="node" id="n2" style="left:51%; top:58%"><div class="ncirc">🚌</div>
+        <div class="nlab">Mitra Carrier</div><div class="nsub">carries down-valley</div></div>
+      <div class="node" id="n3" style="left:72%; top:32%"><div class="ncirc">📡</div>
+        <div class="nlab">Cellular edge</div><div class="nsub">first bar of network</div></div>
+      <div class="node" id="n4" style="left:90%; top:57%"><div class="ncirc">🛡️</div>
+        <div class="nlab">Authorities</div><div class="nsub">auto-alert + GPS</div></div>
+
+      <div class="packet" id="packet"></div>
+    </div>
+
+    <div class="logwrap">
+      <div class="logh"><span class="dot"></span>Relay event log</div>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="result" id="result">
+      <div class="rico">✔</div>
+      <div>
+        <div class="rt">Authorities notified — relay complete</div>
+        <div class="rs" id="resultSub"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footnote">
+  TransitMitra · Team SafarMitra · SIH26204 — demo runs fully offline. Radio layer simulated; sample transit data.
+  SOS relay is a best-effort augmentation, <b>not</b> a replacement for official emergency services.
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   State + helpers
+   ============================================================ */
+var S = { synced:false, online:true, tab:"transit", running:false, sosDone:false };
+var timers = [];
+function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+function $(id){ return document.getElementById(id); }
+
+/* clock that starts near demo time, so the log reads like a real incident */
+var t0 = new Date();
+function stamp(offsetSec){
+  var d = new Date(t0.getTime() + (offsetSec||0)*1000);
+  function p(n){ return (n<10?"0":"")+n; }
+  return p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+}
+
+/* ============================================================
+   Sample data (clearly sample — stated on screen)
+   ============================================================ */
+var RIDES = [
+  { ico:"🚙", bg:"#0E7C86", name:"Shared jeep",  time:"departs 07:30, 11:00, 15:30", fare:120, quote:350 },
+  { ico:"🚌", bg:"#22346B", name:"HRTC bus",     time:"departs 08:15, 14:45",        fare:80,  quote:200 },
+  { ico:"🛺", bg:"#2C8A5B", name:"Auto (local)", time:"on demand",                   fare:60,  quote:180 }
+];
+
+var PHRASES = [
+  { en:"How much is the fare?",        hi:"किराया कितना है?",              ph:"kiraaya kitna hai?" },
+  { en:"Where is the bus stop?",       hi:"बस स्टॉप कहाँ है?",             ph:"bus stop kahaan hai?" },
+  { en:"I need help, please.",         hi:"मुझे मदद चाहिए।",               ph:"mujhe madad chaahiye." },
+  { en:"Is there a doctor nearby?",    hi:"क्या पास में डॉक्टर हैं?",       ph:"kya paas mein doctor hain?" },
+  { en:"Please take me to Kasol.",     hi:"कृपया मुझे कसोल ले चलिए।",      ph:"kripya mujhe Kasol le chaliye." },
+  { en:"Thank you very much.",         hi:"बहुत बहुत धन्यवाद।",            ph:"bahut bahut dhanyavaad." }
+];
+
+/* ============================================================
+   PANEL A — kiosk sync
+   ============================================================ */
+$("syncBtn").addEventListener("click", function(){
+  if (S.synced) return;
+  var btn = $("syncBtn");
+  btn.disabled = true; btn.textContent = "Transferring over Wi-Fi Direct…";
+  $("bar").classList.add("on");
+  var pct = 0;
+  var iv = setInterval(function(){
+    pct += 4 + Math.random()*5;
+    if (pct >= 100){
+      pct = 100; clearInterval(iv);
+      S.synced = true;
+      $("syncedMsg").classList.add("on");
+      btn.textContent = "✔ Synced to guest phone";
+      render();
+    }
+    $("barFill").style.width = pct + "%";
+  }, 70);
+  timers.push(iv);
+});
+
+/* ============================================================
+   PANEL B — phone
+   ============================================================ */
+$("netToggle").addEventListener("click", function(){
+  S.online = !S.online;
+  var sig = $("sig");
+  if (S.online){
+    sig.className = "sig on"; sig.textContent = "● ONLINE";
+    this.textContent = "Go offline ✈";
+  } else {
+    sig.className = "sig off"; sig.textContent = "✈ NO SERVICE";
+    this.textContent = "Go online";
+  }
+  render();
+});
+
+var tabEls = document.querySelectorAll(".tab");
+for (var i=0;i<tabEls.length;i++){
+  tabEls[i].addEventListener("click", function(){
+    for (var j=0;j<tabEls.length;j++) tabEls[j].classList.remove("sel");
+    this.classList.add("sel");
+    S.tab = this.getAttribute("data-v");
+    render();
+  });
+}
+
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function render(){
+  var v = $("view");
+  if (!S.synced){
+    v.innerHTML = '<div class="locked"><b>No offline data yet</b>'
+      + 'Check in at a partner hotel and tap<br><b style="font-size:12px;color:#0E7C86">'
+      + '“Sync to guest phone”</b> on the kiosk to load maps, fares and the emergency directory.</div>';
+    return;
+  }
+  if (S.tab === "transit") return renderTransit(v);
+  if (S.tab === "sos")     return renderSOS(v);
+  return renderLang(v);
+}
+
+function renderTransit(v){
+  var h = '<div class="route-h">OFFLINE ROUTE LOOKUP</div>'
+        + '<div class="rsel">Kasol <span class="ar">→</span> Manali</div>';
+  RIDES.forEach(function(r){
+    h += '<div class="ride">'
+       +   '<div class="ride-t">'
+       +     '<div class="ride-ico" style="background:'+r.bg+'">'+r.ico+'</div>'
+       +     '<div class="ride-n">'+esc(r.name)+'</div>'
+       +     '<div class="ride-time">'+esc(r.time)+'</div>'
+       +   '</div>'
+       +   '<div class="fare"><b>₹'+r.fare+'</b><span class="vbadge">VERIFIED FIXED FARE</span></div>'
+       +   '<div class="quote">typical tourist quote: <s>₹'+r.quote+'</s></div>'
+       +   '<div class="save">you save ₹'+(r.quote-r.fare)+'</div>'
+       + '</div>';
+  });
+  h += '<div class="disc">Fares verified by the hotel kiosk and confirmed by travellers after each ride. '
+     + 'Sample data for demonstration.</div>';
+  v.innerHTML = h;
+}
+
+function renderSOS(v){
+  var canSend = !S.sosDone;
+  v.innerHTML =
+      '<div class="sosbox">'
+    +   '<button class="sosbtn" id="sosBtn"'+(canSend?"":" disabled")+'>SOS</button>'
+    +   '<div class="soshint">'+(S.online
+          ? "Works with or without signal. Switch the phone to <b>NO SERVICE</b> to show the offline relay."
+          : "<b>No network.</b> Your beacon will hop peer-to-peer and ride a Mitra Carrier out of the valley.")
+    +   '</div>'
+    +   '<div class="beacon" id="beacon"></div>'
+    +   '<div class="disc">Best-effort relay — <b>not</b> a replacement for official emergency services.</div>'
+    + '</div>';
+
+  var b = $("sosBtn");
+  if (b) b.addEventListener("click", triggerSOS);
+
+  if (S.sosDone){
+    $("beacon").classList.add("on");
+    $("beacon").innerHTML = beaconHTML();
+  }
+}
+
+var beaconId = "7F2A";
+function beaconHTML(){
+  return '<b>Beacon created offline</b><br>'
+       + 'ID ' + beaconId + ' · AES-signed<br>'
+       + 'GPS 32.0998° N, 77.1892° E<br>'
+       + 'Created ' + stamp(0) + ' · queued for relay';
+}
+
+function renderLang(v){
+  var h = '<div class="route-h">OFFLINE PHRASEBOOK · HINDI</div>';
+  PHRASES.forEach(function(p, idx){
+    h += '<div class="ph">'
+       +   '<div class="ph-txt">'
+       +     '<div class="ph-en">'+esc(p.en)+'</div>'
+       +     '<div class="ph-hi">'+esc(p.hi)+'</div>'
+       +     '<div class="ph-ph">'+esc(p.ph)+'</div>'
+       +   '</div>'
+       +   '<button class="spk" data-i="'+idx+'">🔊</button>'
+       + '</div>';
+  });
+  h += '<div class="disc">On-device text-to-speech — no internet, no server. '
+     + 'Production build ships native-speaker audio per region.</div>';
+  v.innerHTML = h;
+
+  var btns = v.querySelectorAll(".spk");
+  for (var i=0;i<btns.length;i++){
+    btns[i].addEventListener("click", function(){
+      speak(PHRASES[+this.getAttribute("data-i")]);
+    });
+  }
+}
+
+/* on-device TTS, with a graceful fallback if no voice is present */
+function speak(p){
+  try{
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(p.hi);
+    u.lang = "hi-IN"; u.rate = 0.9;
+    var voices = window.speechSynthesis.getVoices() || [];
+    for (var i=0;i<voices.length;i++){
+      if (voices[i].lang && voices[i].lang.toLowerCase().indexOf("hi") === 0){ u.voice = voices[i]; break; }
+    }
+    window.speechSynthesis.speak(u);
+  } catch(e){ /* silent: phonetic text is already on screen */ }
+}
+
+/* ============================================================
+   PANEL C — relay animation
+   ============================================================ */
+var NODES = [
+  { id:"n0", x:10, y:56 },
+  { id:"n1", x:30, y:34 },
+  { id:"n2", x:51, y:58 },
+  { id:"n3", x:72, y:32 },
+  { id:"n4", x:90, y:57 }
+];
+
+function logLine(cls, time, text){
+  var el = $("log");
+  var row = document.createElement("div");
+  row.innerHTML = '<span class="t">'+time+'</span>  <span class="'+cls+'">'+text+'</span>';
+  el.appendChild(row);
+  el.scrollTop = el.scrollHeight;
+}
+
+function idleLog(){
+  $("log").innerHTML = '<div class="idle">Awaiting distress beacon…</div>'
+    + '<div class="idle">Switch the phone to NO SERVICE, then press SOS.</div>';
+}
+
+function movePacket(i){
+  var n = NODES[i];
+  var p = $("packet");
+  p.style.left = n.x + "%";
+  p.style.top  = n.y + "%";
+}
+
+function setNode(i, cls){
+  var el = $(NODES[i].id);
+  el.classList.remove("act","done");
+  if (cls) el.classList.add(cls);
+}
+
+function triggerSOS(){
+  if (S.running || S.sosDone) return;
+  S.running = true; S.sosDone = true;
+  t0 = new Date();
+
+  $("beacon").classList.add("on");
+  $("beacon").innerHTML = beaconHTML();
+  var b = $("sosBtn"); if (b) b.disabled = true;
+
+  $("log").innerHTML = "";
+  $("result").classList.remove("on");
+
+  // step 0 — beacon born
+  movePacket(0);
+  $("packet").classList.add("on");
+  setNode(0,"act");
+  logLine("warn", stamp(0), "Beacon created offline · ID "+beaconId+" · GPS 32.0998, 77.1892");
+  logLine("", stamp(0), "No cellular network — entering store-&amp;-forward mode");
+
+  // step 1 — BLE hop to a peer phone
+  later(function(){
+    setNode(0,"done"); setNode(1,"act"); movePacket(1);
+    logLine("", stamp(4), "Hop 1 → peer device (BLE, RSSI −72 dBm) · 1 copy held");
+  }, 1800);
+
+  // step 2 — boards the Mitra Carrier
+  later(function(){
+    setNode(1,"done"); setNode(2,"act"); movePacket(2);
+    logLine("ok", stamp(17), "Boarded Mitra Carrier · HP-01-4517 (Kasol → Bhuntar, scheduled)");
+    logLine("", stamp(17), "Signal now physically travelling out of the dead zone");
+  }, 3900);
+
+  // step 3 — carrier reaches network
+  later(function(){
+    setNode(2,"done"); setNode(3,"act"); movePacket(3);
+    logLine("", stamp(154), "Network acquired · 1 bar · uplink opened");
+  }, 6100);
+
+  // step 4 — authorities notified
+  later(function(){
+    setNode(3,"done"); setNode(4,"act"); movePacket(4);
+    logLine("ok", stamp(156), "✔ Alert delivered to authorities + emergency contact");
+    logLine("", stamp(156), "Payload: GPS, timestamp, tourist ID, hotel of record");
+  }, 8300);
+
+  later(function(){
+    setNode(4,"done");
+    $("resultSub").innerHTML =
+      "Total relay time <b>2 min 36 s</b> from a zero-network valley — no satellite, no new towers.";
+    $("result").classList.add("on");
+    S.running = false;
+  }, 9600);
+}
+
+/* ============================================================
+   Replay
+   ============================================================ */
+$("replay").addEventListener("click", resetAll);
+
+function resetAll(){
+  clearTimers();
+  S = { synced:false, online:true, tab:S.tab, running:false, sosDone:false };
+
+  // panel A
+  var btn = $("syncBtn");
+  btn.disabled = false; btn.textContent = "Sync to guest phone →";
+  $("bar").classList.remove("on"); $("barFill").style.width = "0";
+  $("syncedMsg").classList.remove("on");
+
+  // panel B
+  $("sig").className = "sig on"; $("sig").textContent = "● ONLINE";
+  $("netToggle").textContent = "Go offline ✈";
+
+  // panel C
+  $("packet").classList.remove("on");
+  for (var i=0;i<NODES.length;i++) setNode(i, null);
+  movePacket(0);
+  $("result").classList.remove("on");
+  idleLog();
+
+  render();
+}
+
+/* keyboard shortcuts for a safe live demo */
+document.addEventListener("keydown", function(e){
+  if (e.key === "1") $("syncBtn").click();
+  if (e.key === "2") $("netToggle").click();
+  if (e.key === "3"){
+    S.tab = "sos";
+    for (var j=0;j<tabEls.length;j++){
+      tabEls[j].classList.toggle("sel", tabEls[j].getAttribute("data-v")==="sos");
+    }
+    render();
+  }
+  if (e.key === "0") resetAll();
+});
+
+/* warm up TTS voice list (some browsers load it lazily) */
+if ("speechSynthesis" in window){
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.getVoices(); };
+}
+
+resetAll();
+</script>
+</body>
+</html>
